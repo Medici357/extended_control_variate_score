@@ -1,0 +1,75 @@
+# @package _global_
+
+# GMM-40: iDEM + CVSI with Rao-Blackwellised (conditional MC) proposal noise.
+#
+#   python dem/train.py experiment=gmm_idem_rb trainer=gpu logger=csv
+#
+# Everything except `model._target_` and the rb_* keys is copied from gmm_idem.yaml, so the baseline is
+#   python dem/train.py experiment=gmm_idem model.use_cvsi=true trainer=gpu logger=csv
+#
+# rb_mode:   none | coord | radial          (none reproduces repo CVSI)
+# rb_rule:   strat | gh (coord)  trap (radial, D=2 only)
+# rb_nq:     nodes per line; lines = K / rb_nq; K (num_estimator_mc_samples) must be divisible by it
+# rb_max_sigma: use RB only where sqrt(h_t) <= this value; plain iid draws above it (same K). null = RB everywhere.
+# rb_coef_weighting: prop | post   (prop = repo's unweighted statistics; keep prop for the first comparison)
+
+defaults:
+  - override /energy: gmm
+  - override /model/noise_schedule: geometric
+
+tags: ["GMM", "iDEM", "CVSI", "RB"]
+
+seed: 12345
+
+logger:
+  wandb:
+    tags: ${tags}
+    group: "gmm"
+
+trainer:
+  max_epochs: 500
+
+model:
+  _target_: dem.models.dem_module_rb.DEMLitModuleRB
+  use_cvsi: true
+  cvsi_weighted_stats: false
+
+  rb_mode: coord
+  rb_rule: strat
+  rb_nq: 10
+  rb_random_frame: true
+  rb_max_sigma: null
+  rb_coef_weighting: prop
+  rb_min_ess: 8.0
+
+  buffer:
+    prioritize: false
+
+  partial_prior:
+    _target_: dem.energies.base_prior.Prior
+    _partial_: true
+    dim: 2
+
+  clipper:
+    _target_: dem.models.components.clipper.Clipper
+    should_clip_scores: True
+    should_clip_log_rewards: False
+    max_score_norm: 70
+    min_log_reward: null
+
+  lambda_weighter:
+    _target_: dem.models.components.lambda_weighter.BasicLambdaWeighter
+    _partial_: true
+    epsilon: 1e-3
+
+  optimizer:
+    lr: 5e-4
+
+  diffusion_scale: 1.0
+
+  num_estimator_mc_samples: 500
+  num_samples_to_generate_per_epoch: 1000
+
+  # this has to be max 1000 since test_set is 1000
+  eval_batch_size: 1000
+  scheduler: null
