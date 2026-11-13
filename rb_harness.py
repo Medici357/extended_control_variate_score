@@ -58,22 +58,32 @@ def reference_score(energy, xt, h, k_ref, chunk):
     return num / den[:, None]
 
 
-def make_variants(K, nqs, coefs, D):
-    """name -> (kind, kwargs, matching_baseline_name, n_independent_units)"""
+TAGS = {"prop": "", "post": "_post", "gpost": "_gpost"}
+
+
+def make_variants(K, nqs, coefs, D, families):
+    """name -> (kind, kwargs, matching_baseline_name, n_independent_units)
+    families: coord | radial | rot | rotlat.   rot_q2 = antithetic pairs; rot_q4 = 4-fold rotation sampling;
+    rotlat additionally rotates the radius quantile (lattice).  In D=2, rot_qN and radial_trap_qN are the same law."""
     V = {BASE: ("old", {}, BASE, K), "rb_none(=repo)": ("rb", dict(rb_mode="none"), BASE, K)}
-    if "post" in coefs:
+    if "post" in coefs or "gpost" in coefs:
         V[BASE_W] = ("old", dict(weighted_stats=True), BASE_W, K)
     for q in nqs:
         if K % q or K // q < 2:
             continue
         nA = K // q
         for cw in coefs:
-            tag = "" if cw == "prop" else "_post"
+            tag = TAGS[cw]
             base = BASE if cw == "prop" else BASE_W
-            V[f"coord_strat_q{q}{tag}"] = ("rb", dict(rb_mode="coord", rb_rule="strat", rb_nq=q, coef_weighting=cw), base, nA)
-            V[f"coord_gh_q{q}{tag}"] = ("rb", dict(rb_mode="coord", rb_rule="gh", rb_nq=q, coef_weighting=cw), base, nA)
-            if D == 2:
+            if "coord" in families:
+                V[f"coord_strat_q{q}{tag}"] = ("rb", dict(rb_mode="coord", rb_rule="strat", rb_nq=q, coef_weighting=cw), base, nA)
+                V[f"coord_gh_q{q}{tag}"] = ("rb", dict(rb_mode="coord", rb_rule="gh", rb_nq=q, coef_weighting=cw), base, nA)
+            if "radial" in families and D == 2:
                 V[f"radial_trap_q{q}{tag}"] = ("rb", dict(rb_mode="radial", rb_rule="trap", rb_nq=q, coef_weighting=cw), base, nA)
+            if "rot" in families:
+                V[f"rot_q{q}{tag}"] = ("rb", dict(rb_mode="rot", rb_nq=q, coef_weighting=cw), base, nA)
+            if "rotlat" in families:
+                V[f"rotlat_q{q}{tag}"] = ("rb", dict(rb_mode="rot", rb_nq=q, rb_rot_radius=1, coef_weighting=cw), base, nA)
     return V
 
 
@@ -106,10 +116,11 @@ def selfcheck(energy, noise, clipper, sample_data, dev, dtype, t=0.5, R=300, nb=
            for _ in range(nb)]
     rD = torch.stack([r[0] for r in ref]); rN = torch.stack([r[1][..., 0] for r in ref])
     rDm, rDs, rNm, rNs = rD.mean(), rD.std() / nb ** .5, rN.mean(), rN.std() / nb ** .5
-    for name, mode, rule in [("coord_strat", "coord", "strat"), ("radial_trap", "radial", "trap"), ("coord_gh", "coord", "gh")]:
+    for name, mode, rule, rm in [("coord_strat", "coord", "strat", 0), ("radial_trap", "radial", "trap", 0),
+                                 ("coord_gh", "coord", "gh", 0), ("rot", "rot", "none", 0), ("rotlat", "rot", "none", 1)]:
         Ds, Ns = [], []
         for _ in range(R):
-            z, lq = rb_noise(K, 1, 2, mode, rule, nq, True, dev, dtype)
+            z, lq = rb_noise(K, 1, 2, mode, rule, nq, True, dev, dtype, rot_radius=rm)
             assert torch.isfinite(z).all(), f"{name}: non-finite proposal noise"
             Dh, Nh = moments(energy, x1, h, z, lq)
             Ds.append(Dh.squeeze()); Ns.append(Nh[0, 0])
@@ -121,6 +132,14 @@ def selfcheck(energy, noise, clipper, sample_data, dev, dtype, t=0.5, R=300, nb=
     # (3) float32 inverse-CDF guard: many strat draws must stay finite
     z, _ = rb_noise(2_000_000 // 10 * 10, 1, 2, "coord", "strat", 10, False, dev, dtype)
     print(f"[selfcheck 3] all {z.shape[0]} strat nodes finite: {bool(torch.isfinite(z).all())}  max|z|={z.abs().max().item():.2f}")
+    # (4) rotation noise in D=5 (odd D, leftover coordinate reflected): every node is N(0, I); group sums vanish when rot_radius=0
+    for n4, rm in [(2, 0), (4, 0), (4, 1)]:
+        Kz = 40000
+        z, _ = rb_noise(Kz, 1, 5, "rot", "none", n4, False, dev, dtype, rot_radius=rm)
+        zz = z.reshape(Kz // n4, n4, 5)
+        print(f"[selfcheck 4] D=5 n_q={n4} rot_radius={rm}: max|node mean|={zz.mean(0).abs().max().item():.3f}  "
+              f"max|node var-1|={(zz.var(0, unbiased=False) - 1).abs().max().item():.3f}  "
+              f"max|group sum|={zz.sum(1).abs().max().item():.1e}   (expect ~0.01-0.03, ~0.02-0.04, and ~0 for rot_radius=0 only)")
 
 
 def main():
@@ -130,7 +149,9 @@ def main():
     ap.add_argument("--dtype", default="float32", choices=["float32", "float64"])   # repo energy: float32 only
     ap.add_argument("--Ks", type=int, nargs="+", default=[16, 64, 500])
     ap.add_argument("--nqs", type=int, nargs="+", default=[4, 10, 25])
-    ap.add_argument("--coefs", nargs="+", default=["prop"], choices=["prop", "post"])
+    ap.add_argument("--coefs", nargs="+", default=["prop"], choices=["prop", "post", "gpost"])
+    ap.add_argument("--families", nargs="+", default=["radial", "rot", "rotlat"],
+                    choices=["coord", "radial", "rot", "rotlat"])
     ap.add_argument("--ts", type=float, nargs="+", default=[0.2, 0.4, 0.5, 0.6, 0.7, 0.85, 1.0])
     ap.add_argument("--B", type=int, default=128)
     ap.add_argument("--R", type=int, default=20)
@@ -169,7 +190,7 @@ def main():
         ref_norm = (ref ** 2).sum(-1).mean().item()
         tt = torch.full((args.B,), t, device=dev, dtype=dtype)
         for K in args.Ks:
-            variants = make_variants(K, args.nqs, args.coefs, 2)
+            variants = make_variants(K, args.nqs, args.coefs, 2, args.families)
             st = {}
             for name, (kind, kw, base_name, nA) in variants.items():
                 outs, esss = [], []
@@ -207,6 +228,10 @@ def main():
     for K in args.Ks:
         names = [n for (k, n) in wsum if k == K]
         print(f"K={K}: " + "   ".join(f"{n}: {wsum[(K, n)] / wsum[(K, bases[(K, n)])]:.2f}" for n in names))
+    print("\n##### loss-weighted MSE ratio vs repo_cvsi (the TRAINING DEFAULT; <1 is better) #####")
+    for K in args.Ks:
+        names = [n for (k, n) in wsum if k == K]
+        print(f"K={K}: " + "   ".join(f"{n}: {wsum[(K, n)] / wsum[(K, BASE)]:.2f}" for n in names))
     with open(args.out, "w", newline="") as f:
         wr = csv.DictWriter(f, fieldnames=list(rows[0].keys())); wr.writeheader(); wr.writerows(rows)
     print(f"\nwrote {args.out}")

@@ -1,0 +1,360 @@
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/torchmetrics/utilities/imports.py:22: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+[rank: 0] Seed set to 12346
+wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/hice1/hmitra7/.netrc.
+wandb: Currently logged in as: hrishitmitra357 (hrishitmitra357-national-institute-of-technology-tiruchi) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run cz5iz2rv
+wandb: Tracking run with wandb version 0.29.0
+wandb: Run data is saved locally in /storage/ice1/3/3/hmitra7/projects/CVSI/dem_results/logs/train/runs/2026-11-05_16-28-16/wandb/run-20261105_162928-cz5iz2rv
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run fiery-darkness-23
+wandb: ⭐️ View project at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: 🚀 View run at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/cz5iz2rv
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:187: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:154: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots()
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/fabric/utilities/cloud_io.py:73: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'test_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+wandb: uploading history steps 1709-1709, summary, console lines 308-345
+wandb: 
+wandb: Run history:
+wandb:              epoch ▁▁▁▂▂▂▃▃▃▃▃▃▃▃▄▄▄▄▄▄▄▅▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇███
+wandb: test/1-Wasserstein ▁
+wandb: test/2-Wasserstein ▁
+wandb:    test/Linear_MMD ▁
+wandb:       test/Mean_L1 ▁
+wandb:       test/Mean_L2 ▁
+wandb:      test/Mean_MSE ▁
+wandb:     test/Median_L1 ▁
+wandb:     test/Median_L2 ▁
+wandb:    test/Median_MSE ▁
+wandb:                +36 ...
+wandb: 
+wandb: Run summary:
+wandb:              epoch 500
+wandb: test/1-Wasserstein 3.50976
+wandb: test/2-Wasserstein 5.73193
+wandb:    test/Linear_MMD -6.61588
+wandb:       test/Mean_L1 1.86974
+wandb:       test/Mean_L2 1.9082
+wandb:      test/Mean_MSE 3.64121
+wandb:     test/Median_L1 2.9454
+wandb:     test/Median_L2 3.0965
+wandb:    test/Median_MSE 9.58831
+wandb:                +36 ...
+wandb: 
+wandb: 🚀 View run fiery-darkness-23 at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/cz5iz2rv
+wandb: ⭐️ View project at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: Synced 5 W&B file(s), 106 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./dem_results/logs/train/runs/2026-11-05_16-28-16/wandb/run-20261105_162928-cz5iz2rv/logs
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/torchmetrics/utilities/imports.py:22: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+[rank: 0] Seed set to 12346
+wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/hice1/hmitra7/.netrc.
+wandb: Currently logged in as: hrishitmitra357 (hrishitmitra357-national-institute-of-technology-tiruchi) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.29.0
+wandb: Run data is saved locally in /storage/ice1/3/3/hmitra7/projects/CVSI/dem_results/logs/train/runs/2026-11-05_16-48-37/wandb/run-20261105_164934-pilaj7h2
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run different-planet-24
+wandb: ⭐️ View project at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: 🚀 View run at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/pilaj7h2
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:187: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:154: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots()
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/fabric/utilities/cloud_io.py:73: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'test_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:              epoch ▁▁▁▁▂▂▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▄▄▅▅▅▅▅▆▆▆▇▇▇▇▇▇▇█
+wandb: test/1-Wasserstein ▁
+wandb: test/2-Wasserstein ▁
+wandb:    test/Linear_MMD ▁
+wandb:       test/Mean_L1 ▁
+wandb:       test/Mean_L2 ▁
+wandb:      test/Mean_MSE ▁
+wandb:     test/Median_L1 ▁
+wandb:     test/Median_L2 ▁
+wandb:    test/Median_MSE ▁
+wandb:                +60 ...
+wandb: 
+wandb: Run summary:
+wandb:              epoch 500
+wandb: test/1-Wasserstein 2.91596
+wandb: test/2-Wasserstein 5.63053
+wandb:    test/Linear_MMD -28.37764
+wandb:       test/Mean_L1 1.18803
+wandb:       test/Mean_L2 1.56239
+wandb:      test/Mean_MSE 2.44107
+wandb:     test/Median_L1 1.33429
+wandb:     test/Median_L2 1.56814
+wandb:    test/Median_MSE 2.45906
+wandb:                +60 ...
+wandb: 
+wandb: 🚀 View run different-planet-24 at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/pilaj7h2
+wandb: ⭐️ View project at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: Synced 5 W&B file(s), 106 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./dem_results/logs/train/runs/2026-11-05_16-48-37/wandb/run-20261105_164934-pilaj7h2/logs
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/torchmetrics/utilities/imports.py:22: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+[rank: 0] Seed set to 12346
+wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/hice1/hmitra7/.netrc.
+wandb: Currently logged in as: hrishitmitra357 (hrishitmitra357-national-institute-of-technology-tiruchi) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run xsyyumgj
+wandb: Tracking run with wandb version 0.29.0
+wandb: Run data is saved locally in /storage/ice1/3/3/hmitra7/projects/CVSI/dem_results/logs/train/runs/2026-11-05_17-11-42/wandb/run-20261105_171231-xsyyumgj
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run cerulean-mountain-25
+wandb: ⭐️ View project at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: 🚀 View run at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/xsyyumgj
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:187: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:154: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots()
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/fabric/utilities/cloud_io.py:73: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'test_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+wandb: updating run metadata
+wandb: uploading history steps 1709-1709, summary, console lines 315-367
+wandb: 
+wandb: Run history:
+wandb:              epoch ▁▁▁▁▁▂▂▂▂▃▃▃▃▃▃▄▄▄▅▅▅▅▅▅▅▆▆▆▆▆▆▆▇▇▇▇▇▇▇█
+wandb: test/1-Wasserstein ▁
+wandb: test/2-Wasserstein ▁
+wandb:    test/Linear_MMD ▁
+wandb:       test/Mean_L1 ▁
+wandb:       test/Mean_L2 ▁
+wandb:      test/Mean_MSE ▁
+wandb:     test/Median_L1 ▁
+wandb:     test/Median_L2 ▁
+wandb:    test/Median_MSE ▁
+wandb:                +60 ...
+wandb: 
+wandb: Run summary:
+wandb:              epoch 500
+wandb: test/1-Wasserstein 5.90479
+wandb: test/2-Wasserstein 10.41493
+wandb:    test/Linear_MMD -3.89141
+wandb:       test/Mean_L1 1.86058
+wandb:       test/Mean_L2 2.00532
+wandb:      test/Mean_MSE 4.0213
+wandb:     test/Median_L1 1.40782
+wandb:     test/Median_L2 1.50899
+wandb:    test/Median_MSE 2.27706
+wandb:                +60 ...
+wandb: 
+wandb: 🚀 View run cerulean-mountain-25 at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/xsyyumgj
+wandb: ⭐️ View project at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: Synced 5 W&B file(s), 106 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./dem_results/logs/train/runs/2026-11-05_17-11-42/wandb/run-20261105_171231-xsyyumgj/logs
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/torchmetrics/utilities/imports.py:22: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+[rank: 0] Seed set to 12347
+wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/hice1/hmitra7/.netrc.
+wandb: Currently logged in as: hrishitmitra357 (hrishitmitra357-national-institute-of-technology-tiruchi) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run k8zlnjj7
+wandb: Tracking run with wandb version 0.29.0
+wandb: Run data is saved locally in /storage/ice1/3/3/hmitra7/projects/CVSI/dem_results/logs/train/runs/2026-11-05_17-31-29/wandb/run-20261105_173157-k8zlnjj7
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run good-durian-26
+wandb: ⭐️ View project at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: 🚀 View run at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/k8zlnjj7
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:187: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:154: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots()
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/fabric/utilities/cloud_io.py:73: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'test_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+wandb: updating run metadata
+wandb: uploading config.yaml
+wandb: 
+wandb: Run history:
+wandb:              epoch ▁▁▁▁▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▄▅▅▅▅▆▆▆▆▆▆▆▇▇▇▇▇▇▇█
+wandb: test/1-Wasserstein ▁
+wandb: test/2-Wasserstein ▁
+wandb:    test/Linear_MMD ▁
+wandb:       test/Mean_L1 ▁
+wandb:       test/Mean_L2 ▁
+wandb:      test/Mean_MSE ▁
+wandb:     test/Median_L1 ▁
+wandb:     test/Median_L2 ▁
+wandb:    test/Median_MSE ▁
+wandb:                +36 ...
+wandb: 
+wandb: Run summary:
+wandb:              epoch 500
+wandb: test/1-Wasserstein 5.61831
+wandb: test/2-Wasserstein 8.48422
+wandb:    test/Linear_MMD -1.98926
+wandb:       test/Mean_L1 2.87364
+wandb:       test/Mean_L2 3.41229
+wandb:      test/Mean_MSE 11.64371
+wandb:     test/Median_L1 4.30289
+wandb:     test/Median_L2 4.44711
+wandb:    test/Median_MSE 19.77678
+wandb:                +36 ...
+wandb: 
+wandb: 🚀 View run good-durian-26 at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/k8zlnjj7
+wandb: ⭐️ View project at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: Synced 5 W&B file(s), 106 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./dem_results/logs/train/runs/2026-11-05_17-31-29/wandb/run-20261105_173157-k8zlnjj7/logs
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/torchmetrics/utilities/imports.py:22: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+[rank: 0] Seed set to 12347
+wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/hice1/hmitra7/.netrc.
+wandb: Currently logged in as: hrishitmitra357 (hrishitmitra357-national-institute-of-technology-tiruchi) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.29.0
+wandb: Run data is saved locally in /storage/ice1/3/3/hmitra7/projects/CVSI/dem_results/logs/train/runs/2026-11-05_17-49-42/wandb/run-20261105_175021-h6d5osux
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run spring-snowball-27
+wandb: ⭐️ View project at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: 🚀 View run at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/h6d5osux
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:187: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:154: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots()
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/fabric/utilities/cloud_io.py:73: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'test_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+wandb: updating run metadata
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml
+wandb: 
+wandb: Run history:
+wandb:              epoch ▁▁▂▂▂▂▃▃▃▃▃▄▄▄▄▄▄▄▄▄▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇████
+wandb: test/1-Wasserstein ▁
+wandb: test/2-Wasserstein ▁
+wandb:    test/Linear_MMD ▁
+wandb:       test/Mean_L1 ▁
+wandb:       test/Mean_L2 ▁
+wandb:      test/Mean_MSE ▁
+wandb:     test/Median_L1 ▁
+wandb:     test/Median_L2 ▁
+wandb:    test/Median_MSE ▁
+wandb:                +60 ...
+wandb: 
+wandb: Run summary:
+wandb:              epoch 500
+wandb: test/1-Wasserstein 2.64406
+wandb: test/2-Wasserstein 4.55254
+wandb:    test/Linear_MMD 33.12221
+wandb:       test/Mean_L1 0.78836
+wandb:       test/Mean_L2 1.10479
+wandb:      test/Mean_MSE 1.22056
+wandb:     test/Median_L1 1.88521
+wandb:     test/Median_L2 2.62615
+wandb:    test/Median_MSE 6.89669
+wandb:                +60 ...
+wandb: 
+wandb: 🚀 View run spring-snowball-27 at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/h6d5osux
+wandb: ⭐️ View project at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: Synced 5 W&B file(s), 106 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./dem_results/logs/train/runs/2026-11-05_17-49-42/wandb/run-20261105_175021-h6d5osux/logs
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/torchmetrics/utilities/imports.py:22: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+[rank: 0] Seed set to 12347
+wandb: WARNING The anonymous setting has no effect and will be removed in a future version.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/hice1/hmitra7/.netrc.
+wandb: Currently logged in as: hrishitmitra357 (hrishitmitra357-national-institute-of-technology-tiruchi) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.29.0
+wandb: Run data is saved locally in /storage/ice1/3/3/hmitra7/projects/CVSI/dem_results/logs/train/runs/2026-11-05_18-13-03/wandb/run-20261105_181414-wel1u3h0
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run swept-yogurt-28
+wandb: ⭐️ View project at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: 🚀 View run at https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/wel1u3h0
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:187: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+/storage/ice1/3/3/hmitra7/projects/CVSI/dem/energies/gmm_energy.py:154: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, ax = plt.subplots()
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/fabric/utilities/cloud_io.py:73: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/hice1/hmitra7/scratch/conda_venvs/dem/lib/python3.10/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:434: The 'test_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=7` in the `DataLoader` to improve performance.
+wandb: 
+wandb: Run history:
+wandb:              epoch ▁▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▃▃▃▄▅▅▅▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇█
+wandb: test/1-Wasserstein ▁
+wandb: test/2-Wasserstein ▁
+wandb:    test/Linear_MMD ▁
+wandb:       test/Mean_L1 ▁
+wandb:       test/Mean_L2 ▁
+wandb:      test/Mean_MSE ▁
+wandb:     test/Median_L1 ▁
+wandb:     test/Median_L2 ▁
+wandb:    test/Median_MSE ▁
+wandb:                +60 ...
+wandb: 
+wandb: Run summary:
+wandb:              epoch 500
+wandb: test/1-Wasserstein 4.13107
+wandb: test/2-Wasserstein 7.69376
+wandb:    test/Linear_MMD -9.87274
+wandb:       test/Mean_L1 1.36864
+wandb:       test/Mean_L2 1.36901
+wandb:      test/Mean_MSE 1.87418
+wandb:     test/Median_L1 1.03994
+wandb:     test/Median_L2 1.06361
+wandb:    test/Median_MSE 1.13127
+wandb:                +60 ...
+wandb: 
+wandb: 🚀 View run swept-yogurt-28 at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem/runs/wel1u3h0
+wandb: ⭐️ View project at: https://wandb.ai/hrishitmitra357-national-institute-of-technology-tiruchi/dem
+wandb: Synced 5 W&B file(s), 106 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./dem_results/logs/train/runs/2026-11-05_18-13-03/wandb/run-20261105_181414-wel1u3h0/logs
+/var/lib/slurm/slurmd/job6828483/slurm_script: line 90: EOF: command not found

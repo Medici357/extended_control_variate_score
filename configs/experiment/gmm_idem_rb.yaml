@@ -7,11 +7,13 @@
 # Everything except `model._target_` and the rb_* keys is copied from gmm_idem.yaml, so the baseline is
 #   python dem/train.py experiment=gmm_idem model.use_cvsi=true trainer=gpu logger=csv
 #
-# rb_mode:   none | coord | radial          (none reproduces repo CVSI)
-# rb_rule:   strat | gh (coord)  trap (radial, D=2 only)
-# rb_nq:     nodes per line; lines = K / rb_nq; K (num_estimator_mc_samples) must be divisible by it
+# rb_mode:   none | coord | radial | rot     (none reproduces repo CVSI; rot = rotation sampling, any D;
+#                                            rot with rb_nq=2 is antithetic pairs; in D=2 rot == radial)
+# rb_rule:   strat | gh (coord)  trap (radial, D=2 only)  ignored for rot
+# rb_nq:     nodes per group; groups = K / rb_nq; K (num_estimator_mc_samples) must be divisible by it
 # rb_max_sigma: use RB only where sqrt(h_t) <= this value; plain iid draws above it (same K). null = RB everywhere.
-# rb_coef_weighting: prop | post   (prop = repo's unweighted statistics; keep prop for the first comparison)
+# rb_rot_radius: rot only; m > 0 also rotates the radius quantile by m*j/rb_nq (mod 1). 0 = pure rotation.
+# rb_coef_weighting: prop | post | gpost   (prop = repo's unweighted statistics; gpost = group-level posterior-weighted fit)
 
 defaults:
   - override /energy: gmm
@@ -39,6 +41,7 @@ model:
   rb_nq: 10
   rb_random_frame: true
   rb_max_sigma: null
+  rb_rot_radius: 0
   rb_coef_weighting: prop
   rb_min_ess: 8.0
 

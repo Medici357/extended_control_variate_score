@@ -1,0 +1,11 @@
+- experiment=gmm_idem
+- model.use_cvsi=true
+- trainer=gpu
+- logger=wandb
+- logger.wandb.project=dem
+- +logger.wandb.entity=hrishitmitra357-national-institute-of-technology-tiruchi
+- +logger.wandb.name=cvsi_base_K500_seed12346
+- logger.wandb.group=rb_vs_base_K500
+- model.num_estimator_mc_samples=500
+- seed=12346
+- ++model.version=1001

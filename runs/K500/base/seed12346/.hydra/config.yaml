@@ -1,0 +1,169 @@
+task_name: train
+tags:
+- GMM
+- iDEM
+train: true
+test: true
+ckpt_path: null
+seed: 12346
+data:
+  _target_: dem.data.dummy.DummyDataModule
+  n_train_batches_per_epoch: 100
+  n_val_batches_per_epoch: 1
+  n_test_batches_per_epoch: 1
+energy:
+  _target_: dem.energies.gmm_energy.GMM
+  dimensionality: 2
+  n_mixes: 40
+  loc_scaling: 40
+  log_var_scaling: 1.0
+  device: ${trainer.accelerator}
+  plot_samples_epoch_period: 1
+  should_unnormalize: true
+  data_normalization_factor: 50
+  data_path_train: null
+model:
+  net:
+    _target_: dem.models.components.mlp.MyMLP
+    _partial_: true
+    hidden_size: 128
+    hidden_layers: 3
+    emb_size: 128
+    time_emb: sinusoidal
+    input_emb: sinusoidal
+    input_dim: ${energy.dimensionality}
+    out_dim: ${energy.dimensionality}
+  noise_schedule:
+    _target_: dem.models.components.noise_schedules.GeometricNoiseSchedule
+    sigma_min: 0.001
+    sigma_max: 1.0
+    name: geometric_${.sigma_min}_${.sigma_max}
+  _target_: dem.models.dem_module.DEMLitModule
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 0.0005
+    weight_decay: 0.0
+  scheduler: null
+  buffer:
+    _target_: dem.models.components.prioritised_replay_buffer.SimpleBuffer
+    dim: ${energy.dimensionality}
+    max_length: 10000
+    min_sample_length: 1000
+    initial_sampler: null
+    device: ${trainer.accelerator}
+    sample_with_replacement: true
+    fill_buffer_during_init: false
+    prioritize: false
+  score_scaler: null
+  use_cvsi: true
+  cvsi_weighted_stats: false
+  ct_per_molecule: true
+  clip_all: false
+  time_range: 1.0
+  num_init_samples: 1024
+  num_estimator_mc_samples: 500
+  num_samples_to_generate_per_epoch: 1000
+  num_samples_to_sample_from_buffer: 512
+  eval_batch_size: 1000
+  num_integration_steps: 1000
+  nll_integration_method: dopri5
+  tol: 1.0e-05
+  nll_with_cfm: false
+  nll_with_dem: false
+  nll_on_buffer: false
+  compute_nll_on_train_data: false
+  logz_with_cfm: false
+  cfm_sigma: 0.0
+  cfm_prior_std: ${energy.data_normalization_factor}
+  use_otcfm: false
+  prioritize_cfm_training_samples: false
+  lr_scheduler_update_frequency: ${trainer.check_val_every_n_epoch}
+  input_scaling_factor: null
+  output_scaling_factor: null
+  compile: false
+  use_richardsons: false
+  cfm_loss_weight: 1.0
+  use_ema: false
+  use_exact_likelihood: true
+  debug_use_train_data: false
+  init_from_prior: false
+  use_buffer: true
+  num_samples_to_save: 100000
+  negative_time: false
+  num_negative_time_steps: 100
+  nll_batch_size: 256
+  seed: ${seed}
+  partial_prior:
+    _target_: dem.energies.base_prior.Prior
+    _partial_: true
+    dim: 2
+  clipper:
+    _target_: dem.models.components.clipper.Clipper
+    should_clip_scores: true
+    should_clip_log_rewards: false
+    max_score_norm: 70
+    min_log_reward: null
+  lambda_weighter:
+    _target_: dem.models.components.lambda_weighter.BasicLambdaWeighter
+    _partial_: true
+    epsilon: 0.001
+  diffusion_scale: 1.0
+  version: 1001
+callbacks:
+  model_checkpoint:
+    _target_: lightning.pytorch.callbacks.ModelCheckpoint
+    dirpath: ${paths.output_dir}/checkpoints
+    filename: epoch_{epoch:03d}
+    monitor: val/2-Wasserstein
+    verbose: true
+    save_last: true
+    save_top_k: 5
+    mode: min
+    auto_insert_metric_name: false
+    save_weights_only: false
+    every_n_train_steps: null
+    train_time_interval: null
+    every_n_epochs: ${trainer.check_val_every_n_epoch}
+    save_on_train_epoch_end: null
+  model_summary:
+    _target_: lightning.pytorch.callbacks.RichModelSummary
+    max_depth: -1
+  rich_progress_bar:
+    _target_: lightning.pytorch.callbacks.RichProgressBar
+logger:
+  wandb:
+    _target_: lightning.pytorch.loggers.wandb.WandbLogger
+    save_dir: ${paths.output_dir}
+    offline: false
+    id: null
+    anonymous: null
+    project: dem
+    log_model: false
+    prefix: ''
+    group: rb_vs_base_K500
+    tags: ${tags}
+    job_type: ''
+    entity: hrishitmitra357-national-institute-of-technology-tiruchi
+    name: cvsi_base_K500_seed12346
+trainer:
+  _target_: lightning.pytorch.trainer.Trainer
+  default_root_dir: ${paths.output_dir}
+  min_epochs: 1
+  max_epochs: 500
+  accelerator: cuda
+  devices: 1
+  check_val_every_n_epoch: 10
+  deterministic: false
+  gradient_clip_val: 0.5
+  inference_mode: false
+paths:
+  root_dir: ${oc.env:PROJECT_ROOT}
+  data_dir: ${oc.env:PROJECT_ROOT}/dem_results/data/
+  log_dir: ${oc.env:PROJECT_ROOT}/dem_results/logs/
+  output_dir: ${hydra:runtime.output_dir}
+  work_dir: ${hydra:runtime.cwd}
+extras:
+  ignore_warnings: false
+  enforce_tags: true
+  print_config: true

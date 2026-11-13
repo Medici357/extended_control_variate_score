@@ -24,6 +24,7 @@ class DEMLitModuleRB(DEMLitModule):
         rb_nq: int = 10,
         rb_random_frame: bool = True,
         rb_max_sigma: Optional[float] = None,
+        rb_rot_radius: int = 0,
         rb_coef_weighting: str = "prop",
         rb_min_ess: float = 8.0,
         **kwargs,
@@ -31,8 +32,12 @@ class DEMLitModuleRB(DEMLitModule):
         kwargs["use_cvsi"] = True  # CVSI by construction
         super().__init__(*args, **kwargs)
 
-        if rb_mode not in ("none", "coord", "radial"):
-            raise ValueError(f"rb_mode must be none|coord|radial, got {rb_mode!r}")
+        if rb_mode not in ("none", "coord", "radial", "rot"):
+            raise ValueError(f"rb_mode must be none|coord|radial|rot, got {rb_mode!r}")
+        if rb_coef_weighting not in ("prop", "post", "gpost"):
+            raise ValueError(f"rb_coef_weighting must be prop|post|gpost, got {rb_coef_weighting!r}")
+        if rb_mode == "rot" and int(rb_nq) < 2:
+            raise ValueError("rb_mode=rot needs rb_nq >= 2 (rb_nq=2 is antithetic pairs)")
         if rb_mode != "none" and self.num_estimator_mc_samples % int(rb_nq) != 0:
             raise ValueError(
                 f"num_estimator_mc_samples={self.num_estimator_mc_samples} must be divisible by rb_nq={rb_nq}"
@@ -43,6 +48,7 @@ class DEMLitModuleRB(DEMLitModule):
             rb_nq=int(rb_nq),
             rb_random_frame=bool(rb_random_frame),
             rb_max_sigma=None if rb_max_sigma is None else float(rb_max_sigma),
+            rb_rot_radius=int(rb_rot_radius),
             coef_weighting=rb_coef_weighting,
             min_ess=float(rb_min_ess),
         )

@@ -1,15 +1,33 @@
-"""Rao-Blackwellised (conditional Monte Carlo) CVSI for the iDEM SNIS estimator.
+"""Rao-Blackwellised / rotation-sampled CVSI for the iDEM SNIS estimator.
 VE schedule (a(t)=1), non-molecular energies only.
 
 Estimator:  s_hat = sum_k w_k f_k,   w = softmax(log p(x0_k) + log q_k)
-  q_k = quadrature weight of node k (constant for iid draws). The numerator and the denominator
-  of the SNIS ratio are both integrated, never the score alone.
+  q_k = quadrature weight of node k (constant for iid draws and for rotation nodes). The numerator and the
+  denominator of the SNIS ratio are both integrated, never the score alone.
 
-Fixes vs. the first version:
-  * _std_normal_icdf clamps with the dtype's eps (in float32, 1 - 1e-12 == 1.0, so erfinv returned +-inf,
-    which turned into NaN scores through d = (x0 - xt)/h = inf).
-  * the single-control coefficient mirrors the repo exactly: no denominator clamp, and a non-finite c
-    falls back to 1.0 (pure DSI), as in idem_score_cvsi_fn.
+Proposal-noise structures (nodes are grouped: K = n_A groups x n_q nodes, node index k = a * n_q + j)
+  none    iid N(0, I) draws (identical to repo CVSI)
+  coord   conditional MC along a random line, nodes at stratified / Gauss-Hermite quantiles of the line coordinate
+  radial  D = 2 only: random radius, n_q equally spaced angles with a random phase
+  rot     ROTATION SAMPLING (Glynn & Szechtman) in any D:  z_j = R^j z_0,  z_0 ~ N(0, I),  R = block rotation by
+          2*pi*k_i/n_q in disjoint coordinate planes (k_i coprime to n_q; a leftover odd coordinate is reflected).
+          Every node is exactly N(0, I) (an orthogonal map of an isotropic Gaussian), and for even n_q the group sum
+          of the nodes is exactly 0.   n_q = 2  ->  antithetic pairs (z, -z).   In D = 2 this is the same
+          distribution as `radial`.
+          rb_rot_radius = m > 0 additionally rotates the radius quantile by m*j/n_q (mod 1) in every plane
+          (a randomly shifted rank-1 lattice, i.e. Cranley-Patterson rotation); marginals stay exactly N(0, I).
+
+Control-variate coefficient (coef_weighting)
+  prop   proposal-weighted node-level OLS (the repo's unweighted statistics)
+  post   posterior(SNIS)-weighted node-level OLS
+  gpost  posterior-weighted GROUP-level OLS: nodes inside a group are dependent, groups are independent, so the
+         coefficient is fit on per-group influence sums (G_a = sum_j w (g - s0), P_a = sum_j w p).
+         (An UNWEIGHTED group-level fit is degenerate for rotation noise: the group sum of d = z / sigma is
+         exactly 0, so the fit would return c = 1.)  Used only where RB is active and the group ESS >= min_ess;
+         elsewhere falls back to `prop`.
+
+Earlier fixes kept: float32-safe inverse CDF (eps clamp), repo-identical single-control coefficient (no denominator
+clamp, non-finite c -> 1.0).
 """
 import math
 
@@ -36,9 +54,43 @@ def _random_frames(B, D, device, dtype):
     return q * torch.sign(torch.diagonal(r, dim1=-2, dim2=-1)).unsqueeze(-2)
 
 
-def rb_noise(K, B, D, mode, rule, n_q, random_frame, device, dtype):
+def _coprime_mults(n):
+    ks = [k for k in range(1, n) if math.gcd(k, n) == 1]
+    return ks if ks else [1]
+
+
+def _rotation_nodes(n_A, n_q, B, D, rot_radius, device, dtype):
+    """z_j = R^j z_0 (optionally with a lattice-rotated radius).  Returns (n_A, n_q, B, D)."""
+    assert n_q >= 2, "rotation sampling needs rb_nq >= 2 (rb_nq = 2 is antithetic pairs)"
+    z0 = torch.randn(n_A, 1, B, D, device=device, dtype=dtype)
+    j = torch.arange(n_q, device=device, dtype=dtype)
+    P = D // 2
+    parts = []
+    if P > 0:
+        ks = _coprime_mults(n_q)
+        k = torch.tensor([ks[i % len(ks)] for i in range(P)], device=device, dtype=dtype)  # (P,)
+        a, b = z0[..., 0 : 2 * P : 2], z0[..., 1 : 2 * P : 2]  # (n_A, 1, B, P)
+        ang = 2.0 * math.pi * j.view(1, n_q, 1, 1) * k.view(1, 1, 1, P) / n_q  # (1, n_q, 1, P)
+        if rot_radius == 0:
+            c, s = torch.cos(ang), torch.sin(ang)
+            oa, ob = c * a - s * b, s * a + c * b
+        else:
+            u0 = torch.exp(-0.5 * (a * a + b * b))  # radius quantile: Uniform(0, 1)
+            shift = (float(rot_radius) * j / n_q).view(1, n_q, 1, 1)
+            u = torch.remainder(u0 + shift, 1.0).clamp_min(torch.finfo(dtype).tiny)
+            r = torch.sqrt(-2.0 * torch.log(u))
+            th = torch.atan2(b, a) + ang
+            oa, ob = r * torch.cos(th), r * torch.sin(th)
+        parts.append(torch.stack([oa, ob], dim=-1).reshape(n_A, n_q, B, 2 * P))
+    if D % 2 == 1:  # leftover coordinate cannot rotate: reflect it (marginal stays N(0, 1))
+        sign = (1.0 - 2.0 * torch.remainder(j, 2.0)).view(1, n_q, 1, 1)
+        parts.append(z0[..., -1:] * sign)
+    return torch.cat(parts, dim=-1)
+
+
+def rb_noise(K, B, D, mode, rule, n_q, random_frame, device, dtype, rot_radius=0):
     """Structured proposal noise.  Returns z (K,B,D) and log_q (K,B).
-    K = n_A * n_q: n_A random lines (or circles), n_q nodes on each. Node index k = a * n_q + j."""
+    K = n_A * n_q: n_A random lines / circles / rotation orbits, n_q nodes on each. Node index k = a * n_q + j."""
     assert K % n_q == 0, f"K={K} must be divisible by rb_nq={n_q}"
     n_A = K // n_q
     if mode == "coord":
@@ -66,6 +118,9 @@ def rb_noise(K, B, D, mode, rule, n_q, random_frame, device, dtype):
         th = phi + 2 * math.pi * torch.arange(n_q, device=device, dtype=dtype).view(1, n_q, 1) / n_q
         z = torch.stack([r * torch.cos(th), r * torch.sin(th)], dim=-1)  # (n_A, n_q, B, 2)
         log_q = torch.zeros(n_A, n_q, B, device=device, dtype=dtype)
+    elif mode == "rot":
+        z = _rotation_nodes(n_A, n_q, B, D, int(rot_radius), device, dtype)  # (n_A, n_q, B, D)
+        log_q = torch.zeros(n_A, n_q, B, device=device, dtype=dtype)
     else:
         raise ValueError(f"unknown rb_mode {mode!r}")
     return z.reshape(K, B, D), log_q.reshape(K, B)
@@ -83,17 +138,34 @@ def _single_control_coef(g, d, m):
     return num / den  # (B,); non-finite handled by the caller (repo fallback c -> 1)
 
 
+def _group_post_coef(g, p, w, n_q):
+    """Group-level (cluster-robust) posterior-weighted OLS for the SNIS ratio.
+    g, p: (K,B,D) unclipped integrands (p = g - d);  w: (K,B) normalised SNIS weights.
+    Delta-method influence terms per group a:  G_a = sum_j w (g - s0),  P_a = sum_j w p   (s0 = SNIS mean of g).
+    Groups are independent, nodes inside a group are not, so c is fit across groups (trace over D)."""
+    K, B, D = g.shape
+    A = K // n_q
+    wk = w.unsqueeze(-1)
+    s0 = (wk * g).sum(0, keepdim=True)
+    G = (wk * (g - s0)).reshape(A, n_q, B, D).sum(1)  # (A,B,D)
+    P = (wk * p).reshape(A, n_q, B, D).sum(1)
+    Gc = G - G.mean(0, keepdim=True)
+    Pc = P - P.mean(0, keepdim=True)
+    return (Gc * Pc).sum(dim=(0, 2)) / (Pc * Pc).sum(dim=(0, 2))  # (B,)
+
+
 def idem_score_cvsi_rb_fn(
     t, x, neg_energy_function, noise_sch, num_mc_samples,
     debug=False, pointwise=False,
     divide_by_dim=False, weighted_stats=False, ct_per_molecule=False,    # accepted and ignored (drop-in signature)
     clipper_tsi=None,
-    rb_mode="coord",              # none | coord | radial
-    rb_rule="strat",              # strat | gh (coord)   trap (radial)
-    rb_nq=10,                     # nodes per line; lines = K / rb_nq
+    rb_mode="coord",              # none | coord | radial | rot
+    rb_rule="strat",              # strat | gh (coord)   trap (radial)   ignored for rot
+    rb_nq=10,                     # nodes per group; groups = K / rb_nq   (rot: rb_nq = 2 is antithetic)
     rb_random_frame=True,
     rb_max_sigma=None,            # use RB only where sqrt(h_t) <= this; iid draws elsewhere (same K)
-    coef_weighting="prop",        # prop | post
+    rb_rot_radius=0,              # rot only: radius-quantile lattice multiplier m (0 = pure rotation)
+    coef_weighting="prop",        # prop | post | gpost
     min_ess=8.0,
 ):
     if getattr(neg_energy_function, "is_molecule", False):
@@ -108,8 +180,10 @@ def idem_score_cvsi_rb_fn(
 
         z = torch.randn(K, B, D, device=x.device, dtype=x.dtype)          # plain iid draws (identical to repo CVSI)
         log_q = torch.zeros(K, B, device=x.device, dtype=x.dtype)
+        use = torch.zeros(B, dtype=torch.bool, device=x.device)           # points where structured noise is active
         if rb_mode != "none":
-            z_rb, lq_rb = rb_noise(K, B, D, rb_mode, rb_rule, rb_nq, rb_random_frame, x.device, x.dtype)
+            z_rb, lq_rb = rb_noise(K, B, D, rb_mode, rb_rule, rb_nq, rb_random_frame, x.device, x.dtype,
+                                   rot_radius=rb_rot_radius)
             use = torch.ones(B, dtype=torch.bool, device=x.device) if rb_max_sigma is None else (b2.sqrt() <= rb_max_sigma)
             z = torch.where(use[None, :, None], z_rb, z)
             log_q = torch.where(use[None, :], lq_rb, log_q)
@@ -128,6 +202,13 @@ def idem_score_cvsi_rb_fn(
         if coef_weighting == "post":
             ess = 1.0 / (w.squeeze(-1) ** 2).sum(0)
             c = torch.where(ess >= min_ess, _single_control_coef(g_u, d, w.squeeze(-1)), c)
+        elif coef_weighting == "gpost":
+            if rb_mode != "none":
+                wk = w.squeeze(-1)
+                c_g = _group_post_coef(g_u, g_u - d, wk, rb_nq)
+                ess_g = 1.0 / (wk.reshape(K // rb_nq, rb_nq, B).sum(1) ** 2).sum(0)   # ESS counted in groups
+                ok = use & (ess_g >= min_ess) & torch.isfinite(c_g)
+                c = torch.where(ok, c_g, c)
         elif coef_weighting != "prop":
             raise ValueError(coef_weighting)
         c = torch.where(torch.isfinite(c), c, torch.ones_like(c))          # repo fallback: c -> 1 (pure DSI)
