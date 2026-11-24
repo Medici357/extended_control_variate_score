@@ -178,3 +178,24 @@ mnist_data/
 
 # vim
 *.sw?
+
+/runs/
+/wandb/
+*.ckpt
+*.pt
+*.csv
+repomix-output*.xml
+rb_harness2*.png
+rotstrat_comparison.png
+
+# training / experiment outputs
+/runs/
+/wandb/
+/outputs/
+*.ckpt
+*.pt
+mode_coverage.csv
+
+# harness outputs (keep the .txt report if you want it in git)
+rb_harness2*.csv
+rb_harness2*.png
