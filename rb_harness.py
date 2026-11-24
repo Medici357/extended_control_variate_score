@@ -180,7 +180,7 @@ def main():
             return
 
     print(f"\nR={args.R} replicates.  bias2% is bias-corrected (subtracts Var/R).  ESS* ignores node correlation.")
-    rows, wsum, bases = [], {}, {}
+    rows, wsum, wvar, bases = [], {}, {}, {}
     for ti, t in enumerate(args.ts):
         h = noise.h(torch.tensor(t)).item()
         lam = h + args.lam_eps
@@ -206,9 +206,10 @@ def main():
                 pp = ((out - ref[None]) ** 2).sum(-1).mean(0)                          # (B,)
                 var_pp = out.var(0, unbiased=True).sum(-1)                             # (B,)
                 bias2_pp = (((mean - ref) ** 2).sum(-1) - var_pp / args.R).clamp_min(0)  # bias-corrected
-                st[name] = dict(mse=pp.mean().item(), pp=pp, bias2=bias2_pp.mean().item(),
+                st[name] = dict(mse=pp.mean().item(), var=var_pp.mean().item(), pp=pp, bias2=bias2_pp.mean().item(),
                                 ess=torch.stack(esss).mean().item(), ms=ms)
                 wsum[(K, name)] = wsum.get((K, name), 0.0) + lam * st[name]["mse"]
+                wvar[(K, name)] = wvar.get((K, name), 0.0) + lam * st[name]["var"]
                 bases[(K, name)] = base_name
             print(f"\n=== t={t}  sigma={math.sqrt(h):.3g}  loss weight={lam:.3g}  K={K} ===")
             if st[BASE]["bias2"] > 0.5 * st[BASE]["mse"]:
@@ -232,6 +233,10 @@ def main():
     for K in args.Ks:
         names = [n for (k, n) in wsum if k == K]
         print(f"K={K}: " + "   ".join(f"{n}: {wsum[(K, n)] / wsum[(K, BASE)]:.2f}" for n in names))
+    print("\n##### loss-weighted VARIANCE ratio vs repo_cvsi (ignores the constant offset from the reference; <1 is better) #####")
+    for K in args.Ks:
+        names = [n for (k, n) in wvar if k == K]
+        print(f"K={K}: " + "   ".join(f"{n}: {wvar[(K, n)] / wvar[(K, BASE)]:.2f}" for n in names))
     with open(args.out, "w", newline="") as f:
         wr = csv.DictWriter(f, fieldnames=list(rows[0].keys())); wr.writeheader(); wr.writerows(rows)
     print(f"\nwrote {args.out}")

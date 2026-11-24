@@ -27,9 +27,10 @@ export WANDB_ENTITY=hrishitmitra357-national-institute-of-technology-tiruchi
 export WANDB_PROJECT=dem
 ENTITY=$WANDB_ENTITY
 
-SEEDS=(12345 12346 12347)
+SEEDS=(${SEED_LIST:-12345 12346 12347})
 SEED=${SEEDS[$SLURM_ARRAY_TASK_ID]}
-ARM=${ARM:-rb}; K=${K:-500}; MODE=${MODE:-coord}; RULE=${RULE:-strat}; NQ=${NQ:-10}; MAXSIG=${MAXSIG:-null}; COEF=${COEF:-prop}
+ARM=${ARM:-rb}; K=${K:-500}; MODE=${MODE:-coord}; RULE=${RULE:-strat}; NQ=${NQ:-10}; MAXSIG=${MAXSIG:-null}; COEF=${COEF:-prop}; ROTM=${ROTM:-0}
+# rotation sampling: MODE=rot NQ=4 (NQ=2 = antithetic), optional ROTM=1 (radius lattice), COEF=prop|post|gpost
 
 nvidia-smi -L
 
@@ -42,13 +43,15 @@ if [ "$ARM" = "base" ]; then
       hydra.run.dir=$REPO/runs/K${K}/base/seed${SEED} \
       ++model.version=$((1000 + SLURM_ARRAY_TASK_ID))
 else
-  TAG=rb_${MODE}_${RULE}_q${NQ}_max${MAXSIG}_${COEF}
+  TAG=rb_${MODE}_${RULE}_q${NQ}_max${MAXSIG}_${COEF}_m${ROTM}
+  # MODE=none = original CVSI estimator run through the RB module (identical to repo CVSI, logs train/rb/ess)
+  if [ "$MODE" = "none" ]; then TAG=cvsi_base_ess; fi
   NAME=${TAG}_K${K}_seed${SEED}
   $PY dem/train.py experiment=gmm_idem_rb trainer=gpu \
       logger=wandb logger.wandb.project=dem +logger.wandb.entity=$ENTITY \
       +logger.wandb.name=$NAME logger.wandb.group=rb_vs_base_K${K} \
       model.num_estimator_mc_samples=$K model.rb_mode=$MODE model.rb_rule=$RULE model.rb_nq=$NQ \
-      model.rb_max_sigma=$MAXSIG model.rb_coef_weighting=$COEF seed=$SEED \
+      model.rb_max_sigma=$MAXSIG model.rb_coef_weighting=$COEF model.rb_rot_radius=$ROTM seed=$SEED \
       hydra.run.dir=$REPO/runs/K${K}/${TAG}/seed${SEED} \
-      ++model.version=$((2000 + SLURM_ARRAY_TASK_ID))
+      ++model.version=$((${VOFF:-2000} + SLURM_ARRAY_TASK_ID))
 fi
