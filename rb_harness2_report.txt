@@ -1,0 +1,236 @@
+HOW TO READ THIS REPORT (plain language)
+  query point   a noisy location x_t where we estimate the score (= gradient of the log-density of the noised
+                data). B of them are drawn at every noise level.
+  reference     a very accurate estimate of the true score at each query point (huge sample, computed twice
+                independently so we know how accurate the reference itself is). It plays the role of "truth".
+  replicate     re-running an estimator R times with fresh randomness at the SAME query points.
+  variance      how much the answer jumps around between replicates  (the estimator's random noise).
+  bias          how far the average answer is from the reference      (systematic error; variance reduction
+                does not remove it; it mostly comes from the 1/ESS bias of self-normalised importance sampling
+                and, if --clip is on, from clipping).
+  MSE           variance + bias^2 = typical squared distance to the truth.
+  var ratio     variance of a method / variance of its baseline.  BELOW 1 = less noise.  The brackets are a 95%
+                bootstrap confidence interval (we resample query points).  Verdict symbols:
+                  ✓ whole interval is below 1  -> real improvement
+                  ✗ whole interval is above 1  -> real degradation
+                  ~ interval contains 1        -> cannot be told apart from the baseline
+  train-wtd     average over noise levels using the training loss weight lambda(t)=h(t)+eps, so it is the
+                number that matters for the training objective (it is dominated by high noise).
+  low/mid/high  equal-weight average over the noise levels inside a band of sigma (so each level counts the
+                same, in units of the squared score size). Bands are set by --bands.
+  x cost        var ratio multiplied by the time ratio. Below 1 means it still wins at equal compute time.
+  ESS           effective sample size = 1 / sum(w^2): how many of the K points really carry weight.
+  units         number of independent random draws (rings / lines / orbits). Points inside a ring are
+                dependent, so more units = more independent information. iid has units = K.
+
+SETTINGS
+  energy=repo  noise levels t=['0.05', '0.15', '0.25', '0.35', '0.45', '0.55', '0.65', '0.75', '0.85', '0.95']  query points B=128  replicates R=30
+  reference = 200000 draws (two independent halves)   bootstrap resamples=500
+  TSI clipping: OFF -> compares pure estimator quality (recommended for variance work).
+
+VARIANT GUIDE (names are the row labels used below)
+  [0 baseline] repo_cvsi: original CVSI: iid noise, ONE control, plain coefficient. This is what training uses today.
+  [1 rb (reported results)] rb_none(=repo): SANITY: cvsi_rb with no structure; must match repo_cvsi
+  [1 rb (reported results)] radial_trap_q4: ring of 4 equally spaced angles, random radius (your method B); plain coefficient
+  [1 rb (reported results)] rot_q4: rotation sampling, 4 copies per group (in 2D identical to radial_trap); plain coefficient
+  [1 rb (reported results)] rotlat_q4: rotation + radius lattice (the only rb mode that spreads radii); plain coefficient
+  [2 rbx sampling] rbx_rotstrat_q4: rings with radius STRATIFIED across the 16 groups, 4 angles each; one control
+  [3 rbx controls/mixture] rbx_rotstrat_q4+mc: rotstrat + multi-control (h, logp, linear); controls only used where ESS >= 100
+  [3 rbx controls/mixture] rbx_rotstrat_q4+def0.2: rotstrat + defensive mixture (0.2 of groups drawn from a broad Gaussian; only acts where sigma >= def_min_sigma=0.3)
+  [3 rbx controls/mixture] rbx_rot_q4+mc: plain rotation + multi-control (isolates the controls from rotstrat)
+  [3 rbx controls/mixture] rbx_iid+mc: iid noise + multi-control (isolates the controls from any sampler change)
+  [4 local ablations] loc_iid_h_ols: SANITY: must match repo_cvsi when --clip 0 (same estimator written inside this file)
+  [4 local ablations] loc_iid_h: plain independent Gaussian draws; controls=h; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_iid_h+logp: plain independent Gaussian draws; controls=h+logp; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_iid_h+lin: plain independent Gaussian draws; controls=h+lin; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_iid_h+logp+lin: plain independent Gaussian draws; controls=h+logp+lin; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rot4_h: rotation sampling (one Gaussian draw per group rotated into q equally spaced copies; in 2D a ring); controls=h; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rot4_h+logp: rotation sampling (one Gaussian draw per group rotated into q equally spaced copies; in 2D a ring); controls=h+logp; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rot4_h+lin: rotation sampling (one Gaussian draw per group rotated into q equally spaced copies; in 2D a ring); controls=h+lin; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rot4_h+logp+lin: rotation sampling (one Gaussian draw per group rotated into q equally spaced copies; in 2D a ring); controls=h+logp+lin; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rotstrat10_h: rings whose RADIUS is stratified across groups (rbx _polar_strat_rot); controls=h; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rotstrat10_h+logp: rings whose RADIUS is stratified across groups (rbx _polar_strat_rot); controls=h+logp; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rotstrat10_h+lin: rings whose RADIUS is stratified across groups (rbx _polar_strat_rot); controls=h+lin; coefficient by squared-SNIS-weight least squares; never clips
+  [4 local ablations] loc_rotstrat10_h+logp+lin: rings whose RADIUS is stratified across groups (rbx _polar_strat_rot); controls=h+logp+lin; coefficient by squared-SNIS-weight least squares; never clips
+
+==============================================================================================================
+RESULTS for K = 64 proposal points per score estimate
+==============================================================================================================
+Baseline health (repo_cvsi): at each noise level, how much of its error is noise vs bias, and the reference accuracy
+     sigma    relVar   bias%     ESS  refFloor%
+  0.000998  3.06e-05   100.0    63.9      0.000
+   0.00264   0.00033   100.0    63.1      0.000
+   0.00553  0.000878   100.0    60.3      0.000
+    0.0112   0.00461   100.0    51.6      0.000
+    0.0224     0.487    98.6    36.5      0.002
+    0.0447      9.38    93.6    19.0      0.017
+    0.0891      59.2    84.0    11.7      0.131
+     0.178       641    69.5     6.9      1.525
+     0.355  1.71e+03    77.9     4.6     11.491
+     0.708     3e+03    82.4     2.8     39.106
+  relVar = baseline variance / mean |true score|^2 (size of the noise relative to the signal).
+  NOTE: at sigma = 0.000998, 0.00264, 0.00553, 0.0112, 0.0224, 0.0447, 0.0891, 0.178, 0.355, 0.708 more than half of the baseline's error is BIAS, which variance reduction cannot remove. There, look at ESS (needs better proposals), not at variance ratios.
+
+A. VARIANCE RATIO BY NOISE LEVEL (K=64)   <1 = less noise than baseline; ✓ real gain, ✗ real loss, ~ unclear
+variant                0.000998 0.00264 0.00553  0.0112  0.0224  0.0447  0.0891   0.178   0.355   0.708    <- sigma
+-- 0 baseline
+-- 1 rb (reported results)
+rb_none(=repo)            1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~
+radial_trap_q4            0.01✓   0.04✓   0.16✓   0.50✓   0.24✓   0.42✓   0.88~   0.79✓   0.90✓   0.96~
+rot_q4                    0.01✓   0.04✓   0.17✓   0.62✓   0.21✓   0.46✓   0.91~   0.84✓   0.98~   0.96~
+rotlat_q4                 0.28✓   0.26✓   0.31✓   0.42✓   0.65✓   0.87✓   0.91~   0.82✓   0.89✓   0.91✓
+-- 2 rbx sampling
+rbx_rotstrat_q4           0.00✓   0.00✓   0.01✓   0.08✓   0.16✓   0.33✓   0.71✓   0.77✓   0.81✓   0.86✓
+-- 3 rbx controls/mixture
+rbx_rotstrat_q4+mc        0.00✓   0.00✓   0.01✓   0.08✓   0.16✓   0.33✓   0.71✓   0.77✓   0.81✓   0.86✓
+rbx_rotstrat_q4+def0.2    0.00✓   0.00✓   0.01✓   0.08✓   0.16✓   0.33✓   0.71✓   0.77✓   0.94~   0.79✓
+rbx_rot_q4+mc             0.01✓   0.03✓   0.17✓   0.56✓   0.21✓   0.42✓   0.93~   0.82✓   0.98~   0.97~
+rbx_iid+mc                1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~
+-- 4 local ablations
+loc_iid_h_ols             1.00~   1.00~   1.00~   1.00✗   1.00✓   1.00✓   1.00✓   1.00✓   1.00~   1.00~
+loc_iid_h                 1.00~   0.99~   0.99~   0.87✓   0.60✓   1.73~   1.27✗   1.33✗ 505.50✗3400.91✗
+loc_iid_h+logp            1.03✗   1.03~   1.00~   0.84✓   0.51✓  36.86~   2.28✗  11.55✗ 590.39✗4720.46✗
+loc_iid_h+lin             1.11✗   1.08✗   1.03~   0.88✓   1.02~   9.77✗   2.71✗   3.82✗ 565.12✗3412.38✗
+loc_iid_h+logp+lin        1.29✗   1.27✗   1.26✗   1.17~   1.12~   1.91✗   1.71✗  10.02✗ 590.99✗4359.23✗
+loc_rot4_h                0.01✓   0.03✓   0.16✓   0.41✓   0.18✓   0.45✓   1.14~   1.27✗ 574.70✗2517.77✗
+loc_rot4_h+logp           0.00✓   0.03✓   0.10✓   0.23✓   0.18✓   0.51✓   2.52~  10.09✗ 595.89✗3958.68✗
+loc_rot4_h+lin            0.00✓   0.01✓   0.09✓   0.19✓   0.41✓   1.04~  19.24✗   3.47✗ 586.93✗2455.46✗
+loc_rot4_h+logp+lin       0.00✓   0.02✓   0.14✓   0.32✓   0.41✓   0.91~   3.35✗   8.44✗ 572.36✗3712.09✗
+
+B. SUMMARY OVER NOISE LEVELS (K=64)   ratios vs the row's baseline; [ ] = 95% bootstrap CI
+variant                 units     train-wtd var ratio  MSE ratio     low     mid    high   x cost    ESS
+-- 0 baseline
+-- 1 rb (reported results)
+rb_none(=repo)             64     1.00 [1.00,1.00] ~   1.00~    1.00~   1.00~   1.00~     0.66   32.0
+radial_trap_q4             16     0.83 [0.78,0.88] ✓   0.99✓    0.24✓   0.79✓   0.94✓     0.61   32.0
+rot_q4                     16     0.87 [0.82,0.92] ✓   0.99✓    0.22✓   0.84✓   0.97~     0.64   32.0
+rotlat_q4                  16     0.87 [0.84,0.90] ✓   0.99✓    0.64✓   0.83✓   0.90✓     0.67   32.0
+-- 2 rbx sampling
+rbx_rotstrat_q4            16     0.74 [0.70,0.78] ✓   0.99✓    0.16✓   0.76✓   0.84✓     0.53   31.9
+-- 3 rbx controls/mixture
+rbx_rotstrat_q4+mc         16     0.74 [0.70,0.78] ✓   0.99✓    0.16✓   0.76✓   0.84✓     0.75   31.9
+rbx_rotstrat_q4+def0.2     16     0.76 [0.71,0.80] ✓   1.03✗    0.16✓   0.76✓   0.84✓     0.67   31.9
+rbx_rot_q4+mc              16     0.86 [0.80,0.91] ✓   0.99✓    0.21✓   0.83✓   0.97~     0.83   32.0
+rbx_iid+mc                 64     1.00 [1.00,1.00] ~   1.00~    1.00~   1.00~   1.00~     0.91   32.0
+-- 4 local ablations
+loc_iid_h_ols              64     1.00 [1.00,1.00] ~   1.00✗    1.00✓   1.00✓   1.00~     0.71   32.0
+loc_iid_h                  64   969.39 [380.10,1944.26] ✗  105.23✗    0.60✓   1.33✗  2348.04✗   682.13   32.0
+loc_iid_h+logp             64  1323.17 [630.77,2386.37] ✗  141.37✗    0.51✓  11.11✗  3218.63✗  1000.12   32.0
+loc_iid_h+lin              64   988.86 [410.32,1960.68] ✗  106.68✗    1.02~   3.80✗  2377.02✗   747.37   32.0
+loc_iid_h+logp+lin         64  1230.37 [562.13,2266.35] ✗  131.55✗    1.12~   9.22✗  2988.97✗   960.14   32.0
+loc_rot4_h                 16   768.31 [341.78,1389.25] ✗  82.04✗    0.18✓   1.25✗  1811.21✗   593.44   32.0
+loc_rot4_h+logp            16  1132.52 [558.96,1925.92] ✗  122.88✗    0.18✓   9.33✗  2735.86✗   911.34   32.0
+loc_rot4_h+lin             16   758.84 [338.53,1383.35] ✗  80.01✗    0.41✓   4.76✗  1776.00✗   618.28   32.0
+loc_rot4_h+logp+lin        16  1065.30 [525.13,1835.54] ✗  116.37✗    0.41✓   7.91✗  2570.38✗   894.92   32.0
+  columns: 'train-wtd' uses the training loss weights; low/mid/high are equal-weight bands of sigma; 'x cost' = var ratio x time ratio (<1 still wins at equal compute).
+
+C. PLAIN-ENGLISH FINDINGS (K=64; variance ratios, 95% CI)
+  - low (σ<0.03): clearly better: rbx_rotstrat_q4 (0.16x [0.07,0.33]), rbx_rotstrat_q4+def0.2 (0.16x [0.07,0.33]), rbx_rotstrat_q4+mc (0.16x [0.07,0.33])
+  - mid (0.03≤σ<0.3): clearly better: rbx_rotstrat_q4 (0.76x [0.70,0.84]), rbx_rotstrat_q4+def0.2 (0.76x [0.70,0.84]), rbx_rotstrat_q4+mc (0.76x [0.70,0.84]); clearly worse: loc_iid_h (1.33x), loc_iid_h+logp (11.11x), loc_iid_h+lin (3.80x), loc_iid_h+logp+lin (9.22x)
+  - high (σ≥0.3): clearly better: rbx_rotstrat_q4 (0.84x [0.81,0.88]), rbx_rotstrat_q4+mc (0.84x [0.81,0.88]), rbx_rotstrat_q4+def0.2 (0.84x [0.80,0.89]); clearly worse: loc_iid_h (2348.04x), loc_iid_h+logp (3218.63x), loc_iid_h+lin (2377.02x), loc_iid_h+logp+lin (2988.97x)
+  - train-weighted (what the loss feels): clearly better: rbx_rotstrat_q4 (0.74x [0.70,0.78]), rbx_rotstrat_q4+mc (0.74x [0.70,0.78]), rbx_rotstrat_q4+def0.2 (0.76x [0.71,0.80]); clearly worse: loc_iid_h (969.39x), loc_iid_h+logp (1323.17x), loc_iid_h+lin (988.86x), loc_iid_h+logp+lin (1230.37x)
+  Reminder: this measures the quality of the score ESTIMATE, not final sample quality. Variants that win here still need training runs with several seeds.
+
+==============================================================================================================
+RESULTS for K = 500 proposal points per score estimate
+==============================================================================================================
+Baseline health (repo_cvsi): at each noise level, how much of its error is noise vs bias, and the reference accuracy
+     sigma    relVar   bias%     ESS  refFloor%
+  0.000998  4.29e-06   100.0   498.9      0.000
+   0.00264  3.43e-05   100.0   492.6      0.000
+   0.00553  0.000119   100.0   470.3      0.000
+    0.0112  0.000648   100.0   400.8      0.000
+    0.0224     0.083    99.8   281.0      0.002
+    0.0447       2.8    98.1   145.9      0.017
+    0.0891      9.32    97.1    87.9      0.131
+     0.178       104    93.7    49.9      1.525
+     0.355       298    95.4    31.7     11.491
+     0.708       671    95.5    16.7     39.106
+  relVar = baseline variance / mean |true score|^2 (size of the noise relative to the signal).
+  NOTE: at sigma = 0.000998, 0.00264, 0.00553, 0.0112, 0.0224, 0.0447, 0.0891, 0.178, 0.355, 0.708 more than half of the baseline's error is BIAS, which variance reduction cannot remove. There, look at ESS (needs better proposals), not at variance ratios.
+
+A. VARIANCE RATIO BY NOISE LEVEL (K=500)   <1 = less noise than baseline; ✓ real gain, ✗ real loss, ~ unclear
+variant                   0.000998 0.00264 0.00553  0.0112  0.0224  0.0447  0.0891   0.178   0.355   0.708    <- sigma
+-- 0 baseline
+-- 1 rb (reported results)
+rb_none(=repo)               1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~   1.00~
+radial_trap_q4               0.01✓   0.04✓   0.16✓   0.49✓   0.19✓   0.30✓   0.83~   0.84~   0.86✓   0.93✓
+rot_q4                       0.01✓   0.05✓   0.15✓   0.56✓   0.17✓   0.29✓   0.95~   0.83~   0.88~   0.92~
+rotlat_q4                    0.29✓   0.30✓   0.28✓   0.34✓   0.63✓   1.18~   0.84✓   0.96~   0.92~   0.90✓
+radial_trap_q10              0.02✓   0.14✓   0.36✓   1.44~   0.15✓   0.24✓   0.77✓   0.98~   0.81✓   0.99~
+rot_q10                      0.01✓   0.13✓   0.38✓   1.28~   0.16✓   0.29✓   0.75✓   0.85✓   0.89~   0.92✓
+rotlat_q10                   0.54✓   0.55✓   0.49✓   0.49✓   0.73✓   1.14~   0.77✓   1.03~   0.91✓   0.95~
+-- 2 rbx sampling
+rbx_rotstrat_q4              0.00✓   0.00✓   0.00✓   0.04✓   0.14✓   0.20✓   0.59✓   0.74✓   0.79✓   0.85✓
+-- 3 rbx controls/mixture
+rbx_rotstrat_q4+mc           0.00✓   0.00✓   0.00✓   0.03✓   0.14✓   0.19✓   0.58✓   0.74✓   0.79✓   0.85✓
+rbx_rotstrat_q4+def0.2       0.00✓   0.00✓   0.00✓   0.04✓   0.14✓   0.20✓   0.59✓   0.74✓   0.73✓   0.52✓
+rbx_rot_q4+mc                0.00✓   0.01✓   0.07✓   0.13✓   0.21✓   0.28✓   0.77✓   0.85~   0.92~   0.92✓
+-- 2 rbx sampling
+rbx_rotstrat_q10             0.00✓   0.00✓   0.01✓   0.03✓   0.01✓   0.20✓   0.25✓   0.50✓   0.63✓   0.74✓
+-- 3 rbx controls/mixture
+rbx_rotstrat_q10+mc          0.00✓   0.00✓   0.00✓   0.01✓   0.01✓   0.20✓   0.25✓   0.50✓   0.63✓   0.74✓
+rbx_rotstrat_q10+def0.2      0.00✓   0.00✓   0.01✓   0.03✓   0.01✓   0.20✓   0.25✓   0.50✓   0.55✓   0.47✓
+rbx_rot_q10+mc               0.00✓   0.02✓   0.12✓   0.44✓   0.19✓   0.28✓   0.81✓   0.75✓   0.91~   0.92✓
+rbx_iid+mc                   1.02✗   1.06~   0.98~   0.77✓   0.90✓   0.97✓   0.99✓   1.00~   1.00~   1.00~
+-- 4 local ablations
+loc_iid_h_ols                1.00~   1.00~   1.00~   1.00~   1.00✓   1.00✓   1.00✓   1.00✓   1.00~   1.00~
+loc_iid_h                    1.00✗   0.99✓   1.00~   0.91✓   0.51✓   1.14~   1.00~   1.26✗ 675.21✗   1.30✗
+loc_iid_h+logp               1.00~   1.00~   0.98~   0.79✓   0.42✓   0.96~   1.02~   1.14✗1010.99✗  47.90✗
+loc_iid_h+lin                1.02~   1.00~   0.96~   0.80✓   0.48✓   3.36~   1.12~   1.78✗ 656.78✗   4.50✗
+loc_iid_h+logp+lin           1.02✗   1.06~   0.98~   0.76✓   0.52✓   1.42~   1.13~   1.46✗ 980.03✗  38.29✗
+loc_rot4_h                   0.01✓   0.04✓   0.16✓   0.31✓   0.19✓   0.91~   0.71✓   0.94~ 783.08~   1.11✗
+loc_rot4_h+logp              0.00✓   0.01✓   0.08✓   0.19✓   0.18✓   0.49✓   0.72✓   0.95~1306.56✗  15.25✗
+loc_rot4_h+lin               0.00✓   0.01✓   0.05✓   0.12✓   0.16✓   1.77~   0.81✓   1.05~ 892.32✗   2.01✗
+loc_rot4_h+logp+lin          0.00✓   0.01✓   0.07✓   0.12✓   0.27✓   0.85✓   1.10~   1.19✗1269.74✗   3.05✗
+loc_rotstrat10_h             0.00✓   0.00✓   0.01✓   0.02✓   0.03✓   0.49✓   0.21✓   0.54✓ 502.10~   0.88~
+loc_rotstrat10_h+logp        0.00✓   0.00✓   0.00✓   0.01✓   0.02✓   0.71✓   0.23✓   0.60✓ 659.60~   3.43~
+loc_rotstrat10_h+lin         0.00✓   0.00✓   0.00✓   0.00✓   0.01✓   1.74~   0.27✓   0.81~ 509.61~   1.54✗
+loc_rotstrat10_h+logp+lin    0.00✓   0.00✓   0.00✓   0.01✓   0.01✓   1.16~   0.38✓   0.99~ 620.79~   1.82✗
+
+B. SUMMARY OVER NOISE LEVELS (K=500)   ratios vs the row's baseline; [ ] = 95% bootstrap CI
+variant                    units     train-wtd var ratio  MSE ratio     low     mid    high   x cost    ESS
+-- 0 baseline
+-- 1 rb (reported results)
+rb_none(=repo)               500     1.00 [1.00,1.00] ~   1.00~    1.00~   1.00~   1.00~     0.95  247.6
+radial_trap_q4               125     0.78 [0.67,0.90] ✓   1.00✓    0.19✓   0.82~   0.91✓     0.81  247.6
+rot_q4                       125     0.79 [0.68,0.91] ✓   1.00✓    0.17✓   0.83✓   0.91✓     0.84  247.6
+rotlat_q4                    125     0.95 [0.88,1.02] ~   1.00✓    0.62✓   0.96~   0.91✓     1.04  247.5
+radial_trap_q10               50     0.80 [0.67,0.91] ✓   1.00✓    0.16✓   0.95~   0.93~     0.83  247.6
+rot_q10                       50     0.78 [0.68,0.88] ✓   1.00✓    0.17✓   0.82✓   0.91✓     0.82  247.6
+rotlat_q10                    50     0.96 [0.89,1.03] ~   1.00~    0.73✓   1.02~   0.94✓     1.06  247.6
+-- 2 rbx sampling
+rbx_rotstrat_q4              125     0.68 [0.58,0.78] ✓   1.00✓    0.14✓   0.72✓   0.83✓     0.70  247.5
+-- 3 rbx controls/mixture
+rbx_rotstrat_q4+mc           125     0.68 [0.57,0.78] ✓   1.00✓    0.14✓   0.71✓   0.83✓     0.92  247.5
+rbx_rotstrat_q4+def0.2       125     0.57 [0.48,0.65] ✓   1.00~    0.14✓   0.72✓   0.58✓     0.72  247.5
+rbx_rot_q4+mc                125     0.79 [0.67,0.90] ✓   1.00✓    0.21✓   0.83✓   0.92✓     1.07  247.6
+-- 2 rbx sampling
+rbx_rotstrat_q10              50     0.52 [0.47,0.58] ✓   0.99✓    0.01✓   0.47✓   0.71✓     0.53  247.4
+-- 3 rbx controls/mixture
+rbx_rotstrat_q10+mc           50     0.52 [0.47,0.58] ✓   0.99✓    0.01✓   0.47✓   0.71✓     0.71  247.4
+rbx_rotstrat_q10+def0.2       50     0.42 [0.38,0.47] ✓   1.00✓    0.01✓   0.47✓   0.49✓     0.53  247.4
+rbx_rot_q10+mc                50     0.76 [0.66,0.87] ✓   1.00✓    0.19✓   0.74✓   0.91✓     1.04  247.6
+rbx_iid+mc                   500     0.99 [0.99,1.00] ✓   1.00✗    0.90✓   1.00✓   1.00~     1.28  247.6
+-- 4 local ablations
+loc_iid_h_ols                500     1.00 [1.00,1.00] ✓   1.00~    1.00✓   1.00✓   1.00~     1.03  247.6
+loc_iid_h                    500   155.16 [1.12,480.14] ✗   4.66✗    0.52✓   1.24✗  208.55✗   157.59  247.6
+loc_iid_h+logp               500   245.21 [2.29,705.95] ✗   7.24✗    0.43✓   1.13✗  344.08✗   261.61  247.6
+loc_iid_h+lin                500   152.30 [2.28,468.47] ✗   4.59✗    0.49✓   1.76✗  205.10✗   164.67  247.6
+loc_iid_h+logp+lin           500   235.52 [3.53,698.39] ✗   6.99✗    0.52✓   1.43✗  327.91✗   262.50  247.6
+loc_rot4_h                   125   179.60 [0.94,692.15] ~   4.81~    0.19✓   0.92~  241.60✗   197.51  247.6
+loc_rot4_h+logp              125   303.18 [1.08,1031.51] ✗   8.76~    0.18✓   0.92~  412.37✗   350.75  247.6
+loc_rot4_h+lin               125   204.97 [1.33,777.19] ✗   5.47✗    0.16✓   1.05~  275.81✗   239.60  247.6
+loc_rot4_h+logp+lin          125   291.41 [1.52,1003.36] ✗   8.34✗    0.27✓   1.18✗  392.61✗   352.24  247.6
+loc_rotstrat10_h              50   115.15 [0.60,455.54] ~   3.94~    0.03✓   0.51✓  155.03~   125.64  247.4
+loc_rotstrat10_h+logp         50   151.91 [0.77,526.06] ~   4.90~    0.02✓   0.57✓  205.23✗   174.73  247.4
+loc_rotstrat10_h+lin          50   117.30 [0.97,460.03] ~   3.93~    0.01✓   0.79~  157.79✗   135.99  247.4
+loc_rotstrat10_h+logp+lin     50   142.74 [1.06,537.89] ✗   4.60~    0.01✓   0.94~  192.18✗   170.37  247.4
+  columns: 'train-wtd' uses the training loss weights; low/mid/high are equal-weight bands of sigma; 'x cost' = var ratio x time ratio (<1 still wins at equal compute).
+
+C. PLAIN-ENGLISH FINDINGS (K=500; variance ratios, 95% CI)
+  - low (σ<0.03): clearly better: loc_rotstrat10_h+logp+lin (0.01x [0.01,0.02]), loc_rotstrat10_h+lin (0.01x [0.00,0.02]), rbx_rotstrat_q10+mc (0.01x [0.01,0.04])
+  - mid (0.03≤σ<0.3): clearly better: rbx_rotstrat_q10+mc (0.47x [0.38,0.54]), rbx_rotstrat_q10 (0.47x [0.38,0.54]), rbx_rotstrat_q10+def0.2 (0.47x [0.38,0.54]); clearly worse: loc_iid_h (1.24x), loc_iid_h+logp (1.13x), loc_iid_h+lin (1.76x), loc_iid_h+logp+lin (1.43x)
+  - high (σ≥0.3): clearly better: rbx_rotstrat_q10+def0.2 (0.49x [0.46,0.53]), rbx_rotstrat_q4+def0.2 (0.58x [0.54,0.63]), rbx_rotstrat_q10 (0.71x [0.66,0.76]); clearly worse: loc_iid_h (208.55x), loc_iid_h+logp (344.08x), loc_iid_h+lin (205.10x), loc_iid_h+logp+lin (327.91x)
+  - train-weighted (what the loss feels): clearly better: rbx_rotstrat_q10+def0.2 (0.42x [0.38,0.47]), rbx_rotstrat_q10+mc (0.52x [0.47,0.58]), rbx_rotstrat_q10 (0.52x [0.47,0.58]); clearly worse: loc_iid_h (155.16x), loc_iid_h+logp (245.21x), loc_iid_h+lin (152.30x), loc_iid_h+logp+lin (235.52x)
+  Reminder: this measures the quality of the score ESTIMATE, not final sample quality. Variants that win here still need training runs with several seeds.

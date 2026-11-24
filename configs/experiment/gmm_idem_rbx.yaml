@@ -1,0 +1,78 @@
+# @package _global_
+
+# GMM-40: iDEM + CVSI with  stratified rotation sampling + defensive mixture + multi-control + mode-coverage logging.
+#
+#   python dem/train.py experiment=gmm_idem_rbx trainer=gpu logger=wandb
+#
+# rb_mode:        none | rot | rotstrat     (rotstrat = radius stratified across groups + angle rotated inside a group)
+# rb_nq:          nodes per group (K / rb_nq groups; K must be divisible)
+# def_alpha:      fraction of groups drawn from the broad "defensive" Gaussian (0 = off)
+# def_scale/center: std and centre of that Gaussian, in normalised units (data lives in about [-0.8, 0.8])
+# def_min_sigma:  defensive component is used only where sqrt(h_t) >= this (high noise)
+# multi_control:  jointly fit [h, logp control, 2 linear controls] where ESS >= mc_min_ess
+# cov_*:          mode-coverage metric (within cov_radius_sigmas std of a mode; covered = >= cov_min_frac of fair share)
+
+defaults:
+  - override /energy: gmm
+  - override /model/noise_schedule: geometric
+
+tags: ["GMM", "iDEM", "CVSI", "RBX"]
+
+seed: 12345
+
+logger:
+  wandb:
+    tags: ${tags}
+    group: "gmm"
+
+trainer:
+  max_epochs: 500
+
+model:
+  _target_: dem.models.dem_module_rbx.DEMLitModuleRBX
+  use_cvsi: true
+  cvsi_weighted_stats: false
+
+  rb_mode: rotstrat
+  rb_nq: 10
+  def_alpha: 0.0
+  def_scale: 0.6
+  def_center: 0.0
+  def_min_sigma: 0.3
+  multi_control: false
+  mc_min_ess: 100.0
+  mc_ridge: 1e-6
+  cov_radius_sigmas: 3.0
+  cov_min_frac: 0.1
+
+  buffer:
+    prioritize: false
+
+  partial_prior:
+    _target_: dem.energies.base_prior.Prior
+    _partial_: true
+    dim: 2
+
+  clipper:
+    _target_: dem.models.components.clipper.Clipper
+    should_clip_scores: True
+    should_clip_log_rewards: False
+    max_score_norm: 70
+    min_log_reward: null
+
+  lambda_weighter:
+    _target_: dem.models.components.lambda_weighter.BasicLambdaWeighter
+    _partial_: true
+    epsilon: 1e-3
+
+  optimizer:
+    lr: 5e-4
+
+  diffusion_scale: 1.0
+
+  num_estimator_mc_samples: 500
+  num_samples_to_generate_per_epoch: 1000
+
+  # this has to be max 1000 since test_set is 1000
+  eval_batch_size: 1000
+  scheduler: null
